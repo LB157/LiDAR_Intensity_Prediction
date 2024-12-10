@@ -11,12 +11,12 @@ val:
   shuffle: False
   keep_ram: True
 train_loader:
-  batch_size: 24
+  batch_size: 2 # 24
   shuffle: True
   num_workers: 4
   pin_memory: True
 val_loader:
-  batch_size: 24
+  batch_size: 2 # 24
   shuffle: False
   num_workers: 4
   pin_memory: True

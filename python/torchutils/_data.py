@@ -135,6 +135,7 @@ class Runner:
             self.iter_wrap = tqdm.tqdm
         else:
             self.iter_wrap = functools.partial(map, lambda x, *args, **kwargs: x)
+            # self.iter_wrap = lambda iterable: iterable
         self.pass_as_kwargs = pass_as_kwargs
         self.accum_losses = accum_losses
         self.run_times = collections.Counter()
@@ -160,7 +161,7 @@ class Runner:
             self.run_losses[dataloader.dataset] = list()
         with self._setup():
             with torch.set_grad_enabled(mode == TorchMode.TRAIN):
-                for batch_id, batch in self.iter_wrap(enumerate(dataloader), total=len(dataloader)):
+                for batch_id, batch in self.iter_wrap(enumerate(dataloader)):
                     batch_len = len(next(iter(batch.values())))
                     did += batch_len
                     if self.cuda:
@@ -191,8 +192,11 @@ class Runner:
                     if loss is not None:
                         print_str += f'Loss: {loss:8.04f}\t'
                     if self.accum_losses:
+                        loss_cpu = loss.detach().cpu()  # 将损失移动到 CPU
                         self.run_losses[dataloader.dataset].append(loss.detach() * batch_len)
-                        print_str += f'Mean loss over epoch: {np.sum(self.run_losses[dataloader.dataset])/did: 8.04f}\t'
+                        mean_loss = np.sum([l.item() for l in self.run_losses[dataloader.dataset]]) 
+                        # print_str += f'Mean loss over epoch: {np.sum(self.run_losses[dataloader.dataset])/did: 8.04f}\t'
+                        print_str += f'Mean loss over epoch: {mean_loss / did: 8.04f}\t'
                     extra = self.run_after_iter(batch, output, loss, mode, did, batch_id, len(dataloader), dataloader.dataset)
                     if extra is not None:
                         print_str += str(extra)
