@@ -9,7 +9,7 @@ import traceback
 import multiprocess as mp
 
 import datatools
-
+'''
 _orig_print = builtins.print
 
 
@@ -19,7 +19,7 @@ def nprint(*args, **kwargs):
 
 
 builtins.print = nprint
-
+'''
 
 def try_del(entry, attr):
     try:
@@ -31,7 +31,12 @@ def try_del(entry, attr):
 def access(did, data, del_data):
     try:
         entry = data[did]
-        print(f'{did}: {entry.velodyne_grid.shape}')
+        # print(f'{did}: {entry.velodyne_grid.shape}')
+        print(f'grid: {did}: {entry.velodyne_grid.shape}\n')
+        print(f'pcl: {did}: {entry.velodyne_pcl.shape}\n')
+        print(f'color_pcl: {did}: {entry.color_pcl.shape}\n')
+        print(f'color_pcl_gs_inten: {did}: {entry.color_pcl_gs_inten.shape}\n')
+        print(f'color_velo: {did}: {entry.color_velo.shape}\n')
         if del_data:
             for i in range(did, did + 4):
                 for attr in ['pcl', 'ego_pcl', 'bbox_data']:
@@ -40,7 +45,7 @@ def access(did, data, del_data):
         print(e, file=sys.stdout)
         print(traceback.format_exc(), file=sys.stdout)
 
-
+#/home/public/DataSetLarge/SemanticKitti/dataset/sequences
 def parse_args():
     parser = argparse.ArgumentParser('Create velodyne data')
     parser.add_argument('in_dir', help='Dataset directory. The directory shoud have a structure {in_dir}/orig/orig-{json,rgb,depth,stencil}')
@@ -51,7 +56,10 @@ def parse_args():
 
 if __name__ == '__main__':
     parsed = parse_args()
-    dataset = datatools.gta.GTADataset(parsed.in_dir, width=4)
+    # dataset = datatools.gta.GTADataset(parsed.in_dir, width=4)
+    dataset = datatools.kitti.KittiDataset(parsed.in_dir)
     f = functools.partial(access, data=dataset, del_data=parsed.delete_tmp)
+    # f(0)
     with mp.Pool(parsed.num_processes) as pool:
-        pool.map(f, range(0, len(dataset), 4))
+        # pool.map(f, range(0, len(dataset), 4))
+        pool.map(f, range(0, len(dataset)))

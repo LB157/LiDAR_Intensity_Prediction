@@ -1,11 +1,11 @@
 train:
-  folder: /mnt/data/vras/Reflectance/data/TrainRef
+  folder: /home/public/liubo/lidar-intensity/dataset/train
   name: kitti-train
   ext: .npy
   shuffle: True
   keep_ram: True
 val:
-  folder: /mnt/data/vras/Reflectance/data/Validation
+  folder: /home/public/liubo/lidar-intensity/dataset/train
   name: kitti-val
   ext: .npy
   shuffle: False
