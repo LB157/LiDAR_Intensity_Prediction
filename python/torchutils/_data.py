@@ -23,38 +23,59 @@ except ImportError:
 
 builtins.print = functools.partial(print, flush=True)
 
-
+# 函数 _compose(*functions) 的作用是实现函数组合（function composition）。
+# 函数组合是指将多个函数按顺序组合成一个新函数，使得新函数的输出成为下一个函数的输入。
 def _compose(*functions):
     return functools.reduce(lambda f, g: lambda x: f(g(x)), functions, lambda x: x)
 
 
 class SimpleDataset(data.Dataset):
+    """
+    自定义数据集类，继承自 PyTorch 的 data.Dataset
+    """
     class weakdict(dict):
-        __slots__ = ('__weakref__',)
+        __slots__ = ('__weakref__',) # 为弱字典定义槽位
 
     class weaklist(list):
-        __slots__ = ('__weakref__',)
+        __slots__ = ('__weakref__',)# 为弱列表定义槽位
 
     def __init__(self, folder: str, name=None, ext='.npy', shuffle=True, keep_ram=False):
+        """
+        初始化数据集
+        :param folder: 数据文件夹路径
+        :param name: 数据集名称
+        :param ext: 数据文件扩展名
+        :param shuffle: 是否打乱数据
+        :param keep_ram: 是否保留数据在内存中
+        """
         self.folder = folder
         self.ext = ext.lower()
         if name is None:
+            # 从路径中提取文件夹名作为数据集名称
             name = osp.split(folder)[1]
         self.name = name
+        # 扫描文件夹中的文件
         self.files = self.scan_files()
         if shuffle:
+            # 打乱文件顺序
             random.shuffle(self.files)
         self._len = len(self.files)
         self.keep_ram = keep_ram
         if keep_ram:
             self.loaded = dict()
         else:
+            # 使用弱引用字典减少内存占用
             self.loaded = weakref.WeakValueDictionary()
 
     def __len__(self):
         return self._len
 
     def __getitem__(self, key):
+        """
+        获取数据项
+        :param key: 数据索引
+        :return: 返回对应的文件数据
+        """
         key = int(key)
         fname = self.files[key]
         data_item = self.loaded.get(fname, None)
@@ -65,6 +86,11 @@ class SimpleDataset(data.Dataset):
         return data_item
 
     def load_and_transform(self, fname, key):
+        """
+        读取和转换数据 (未实现)
+        :param fname: 文件名
+        :param key: 索引
+        """
         raise NotImplementedError
 
     def scan_files(self):
@@ -88,6 +114,13 @@ class TorchMode(enum.Enum):
 
 
 def dict_to_cuda(d, *args, **kwargs):
+    """
+    将字典中的张量移动到 CUDA 设备
+    :param d: 包含张量的字典
+    :param args: 其他参数
+    :param kwargs: 其他参数
+    :return: 移动后的字典
+    """
     for key in d:
         if hasattr(d[key], 'cuda'):
             d[key] = d[key].cuda(*args, **kwargs)
@@ -111,12 +144,30 @@ class Runner:
         pass_as_kwargs=False,
         cat_channels=False,
     ):
+        """
+        初始化 Runner
+        :param model: 训练的模型
+        :param loss_fn: 损失函数
+        :param optimizer: 优化器
+        :param pass_keys: 需要传递的键
+        :param gt_keys: 真实值的键
+        :param embedder: 嵌入层
+        :param embed_channel: 嵌入通道
+        :param verbose: 是否详细输出
+        :param args: 其他参数
+        :param use_tqdm: 是否使用 tqdm 进度条
+        :param accum_losses: 是否累积损失
+        :param pass_as_kwargs: 是否将参数作为关键字传递
+        :param cat_channels: 是否连接通道
+        """
+        
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.pass_keys = pass_keys
         self.gt_keys = gt_keys
         self.verbose = verbose
+         # 判断是否能够使用 tqdm
         self.use_tqdm = use_tqdm & _TQDM_FOUND
         self.embedder = embedder
         self.embed_channel = embed_channel
@@ -153,8 +204,13 @@ class Runner:
         builtins.print = _stash
 
     def __call__(self, dataloader, mode):
-        datalen = len(dataloader.dataset)
-        did = 0
+        """
+        运行训练或评估过程
+        :param dataloader: 数据加载器
+        :param mode: 模式（训练或评估）
+        """
+        datalen = len(dataloader.dataset)# 数据集长度
+        did = 0# 记录处理过的数据量
         self.model = self.model.train() if mode is TorchMode.TRAIN else self.model.eval()
         self.run_pre_epoch(dataloader.dataset, mode)
         if self.accum_losses:
@@ -169,6 +225,7 @@ class Runner:
                     if mode == TorchMode.TRAIN:
                         self.optimizer.zero_grad()
                     if self.embedder is not None:
+                        #注意 
                         batch[self.embed_channel + '_embed'] = self.embedder(batch[self.embed_channel])
                     run_kwargs = collections.OrderedDict((key, batch[key]) for key in self.pass_keys)
                     if self.cat_channels:
