@@ -13,6 +13,8 @@ import otils as ot
 import torchutils as tu
 
 from . import modules, squeezeseg, utils
+from torchinfo import summary
+import contextlib
 
 
 class Dataset(tu.SimpleDataset):
@@ -139,9 +141,18 @@ class EvalRunner(tu.Runner):
 
 
 class Runner(tu.Runner):
+    """
+    Runner 类，继承自 tu.Runner，用于管理模型的训练和评估过程。
+    """
     def __init__(self, config):
+        """
+        初始化 Runner 实例。
+
+        :param config: 配置字典，包含模型、优化器、损失函数等信息。
+        """
         self.config = config
         device = torch.device(self.config['device'])
+        # 从配置中加载模型并将其转移到指定设备
         model = squeezeseg.SqueezeWithHead.load_from_kwargs(self.config['model']).to(device)
         if 'embed' in self.config:
             embed = utils.Embed(self.config['embed']).to(device)
@@ -159,6 +170,20 @@ class Runner(tu.Runner):
         self.info_fn = utils.info_fn(**self.config['info_fn'])
         self.info_accum = dict()
 
+        # 保存模型结构到文件
+        # 定义输入尺寸
+        # input_size = (5, 11, 56, 512)  # 将要传入模型的输入尺寸
+
+        # 文件名
+        # file_name = 'model_summary.txt'
+
+        # 将模型结构保存到文件
+        # with open(file_name, 'w') as f:
+            # with contextlib.redirect_stdout(f):
+                # summary(model, input_size)
+
+        # self.save_model_structure_to_file('model_structure.txt',model)
+
         super().__init__(
             model,
             loss_fn,
@@ -174,6 +199,27 @@ class Runner(tu.Runner):
             embedder=embed,
             embed_channel=embed_channel,
         )
+
+
+
+    def save_model_structure_to_file(self, filename,model):
+        """
+        将模型结构保存到指定的文本文件中
+        """
+        with open(filename, 'w') as f:
+            f.write(str(model))  # 将模型结构转换为字符串并写入文件
+
+    def save_layer_input_output_to_file(self, filename):
+        """
+        将每一层的输入输出信息保存到文本文件中
+        """
+        with open(filename, 'w') as f:
+            for record in self.input_output_records:
+                f.write(f"Layer: {record['layer']}\n")
+                f.write(f"  Input: {record['input']}\n")
+                f.write(f"  Output: {record['output']}\n")
+                f.write("\n")  # 每条记录之间留一个空行
+
 
     def run_pre_epoch(self, dataset, mode):
         self.info_accum[(dataset, mode)] = None

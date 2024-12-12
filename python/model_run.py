@@ -5,6 +5,7 @@ import inten
 import otils as ot
 import torchutils as tu
 
+
 if __name__ == '__main__':
     config = ot.io.load_multi_yml(sys.argv[1])
     if 'seed' in config:
@@ -24,6 +25,8 @@ if __name__ == '__main__':
     else:
         scheduler = None
     for i in range(config['epochs']):
+        #  runner 函数，在训练模式下对训练数据集（trn_dataset）进行训练。
+        # 返回的损失值被赋值给变量 trn_loss。这里，tu.TorchMode.TRAIN 指定模型的当前模式为训练模式。
         trn_loss = runner(trn_dataset, tu.TorchMode.TRAIN)
         val_loss = runner(val_dataset, tu.TorchMode.EVAL)
         if scheduler is not None:

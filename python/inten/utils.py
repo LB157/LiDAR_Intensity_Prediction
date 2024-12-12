@@ -38,25 +38,51 @@ def create_loss_from_kwargs(reflect=False, gamma=2, l2_weight=0.5, ignore_index=
         else:
 
             def fn(output, mask=None, labels=None, mean=True, **kwargs):
+                """
+                计算损失函数的函数。
+
+                参数:
+                - output: 模型的输出，包含预测的二进制分类结果和距离分布。
+                - mask: 掩码，用于指示哪些位置需要计算损失。
+                - labels: 标签，用于生成标签掩码。
+                - mean: 是否对损失取平均值，默认为 True。
+                - **kwargs: 其他关键字参数，包含 intensity_bin, intensity_dist, rgb_mask 等。
+
+                返回:
+                - 如果 mean=True，返回损失的平均值；否则返回损失张量。
+                """
+                # 从 kwargs 中获取 intensity_bin 和 intensity_dist
                 intensity_bin = kwargs['intensity_bin']
                 intensity_dist = kwargs['intensity_dist']
+                 # 从 kwargs 中获取 rgb_mask，如果没有提供则创建一个与 intensity_dist 形状相同的全 1 张量
                 rgb_mask = kwargs.get('rgb_mask', None)
+                 # 如果没有提供 mask，则创建一个与 intensity_dist 形状相同的全 1 张量
                 if rgb_mask is None:
                     rgb_mask = torch.ones_like(intensity_dist)
                 if mask is None:
                     mask = torch.ones_like(intensity_dist)
+                # 将 rgb_mask 和 mask 转换为布尔张量，表示是否需要计算损失
                 rgb_mask = rgb_mask >= 0
                 mask = mask >= 0
+                # 如果提供了 labels，则生成标签掩码，忽略 ignore_index 对应的标签
                 if labels is not None:
                     label_mask = ~(labels == ignore_index)[:, None, ...]
                 else:
+                     # 如果没有提供 labels，则创建一个与 mask 形状相同的全 1 张量
                     label_mask = torch.ones_like(mask)
+                 # pred_bin(N,1)。  pred_dist:(N,1) 从 output 中提取预测的二进制分类结果和距离分布
                 pred_bin, pred_dist, *_ = output
+                # pred_prob (N,C) 对预测的二进制分类结果进行 softmax 操作，得到预测的概率分布
                 pred_prob = F.softmax(pred_bin, 1)
+                # ce_loss (N,1) 计算交叉熵损失，使用 reduction='none' 表示不进行降维
                 ce_loss = F.cross_entropy(pred_bin, intensity_bin, reduction='none')[:, None, ...]
+                  # weight (N,1) ；计算权重，权重为 (1 - 预测概率) 的 gamma 次方
                 weight = (1 - pred_prob.gather(1, intensity_bin[:, None, ...])) ** gamma
+                # l2_loss (N,1) 计算均方误差损失，使用 reduction='none' 表示不进行降维
                 l2_loss = F.mse_loss(pred_dist, intensity_dist, reduction='none')
+                # 计算总的损失，权重乘以交叉熵损失加上均方误差损失，并应用 rgb_mask, mask 和 label_mask (N)
                 loss = (weight * ce_loss + l2_loss * l2_weight)[rgb_mask & mask & label_mask]
+                 # 如果 mean=True，返回损失的平均值；否则返回损失张量
                 if mean:
                     return torch.mean(loss)
                 return loss

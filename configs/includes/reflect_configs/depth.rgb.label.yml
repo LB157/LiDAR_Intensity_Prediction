@@ -1,6 +1,6 @@
 model:
   squeeze_kwargs:
-    input_channels: 8
+    input_channels: 11 # 8
 pass_keys:
   - depth
   - labels_embed
@@ -11,8 +11,8 @@ gt_keys:
   - rgb_mask
   - labels
 embed:
-  num_embeddings: 5
-  embedding_dim: 2
+  num_embeddings: 26
+  embedding_dim: 5
   max_norm: 1
 embed_channel: labels
 store_dir: drgbl

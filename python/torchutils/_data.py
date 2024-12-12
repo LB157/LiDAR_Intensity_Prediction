@@ -109,6 +109,7 @@ class SimpleDataset(data.Dataset):
 
 
 class TorchMode(enum.Enum):
+    #名为 TRAIN。enum.auto() 函数会自动分配一个唯一的值给这个成员，通常从 1 开始，并会为后续成员递增
     TRAIN = enum.auto()
     EVAL = enum.auto()
 
@@ -126,7 +127,7 @@ def dict_to_cuda(d, *args, **kwargs):
             d[key] = d[key].cuda(*args, **kwargs)
     return d
 
-
+#otils，inten，torchutils
 class Runner:
     def __init__(
         self,
@@ -160,7 +161,11 @@ class Runner:
         :param pass_as_kwargs: 是否将参数作为关键字传递
         :param cat_channels: 是否连接通道
         """
-        
+        # batch[self.embed_channel].shape 为[2,56,512]
+        # self.embedder 为Embed(5, 2, max_norm=1)
+        # 你的嵌入层 self.embedder 是通过 Embed(5, 2, max_norm=1) 初始化的，
+        # 这表示嵌入层有 5 个词（索引从 0 到 4），并且每个词的嵌入大小是 2。这意味着你传入的索引值必须在 0 到 4 的范围内。
+        # 标签 应该还要做映射
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
@@ -211,39 +216,50 @@ class Runner:
         """
         datalen = len(dataloader.dataset)# 数据集长度
         did = 0# 记录处理过的数据量
-        self.model = self.model.train() if mode is TorchMode.TRAIN else self.model.eval()
-        self.run_pre_epoch(dataloader.dataset, mode)
+        self.model = self.model.train() if mode is TorchMode.TRAIN else self.model.eval() # 设置模型模式
+        self.run_pre_epoch(dataloader.dataset, mode)  # 运行前期定义
         if self.accum_losses:
-            self.run_losses[dataloader.dataset] = list()
-        with self._setup():
-            with torch.set_grad_enabled(mode == TorchMode.TRAIN):
-                for batch_id, batch in self.iter_wrap(enumerate(dataloader)):
-                    batch_len = len(next(iter(batch.values())))
-                    did += batch_len
+            self.run_losses[dataloader.dataset] = list() # 初始化损失列表
+        with self._setup(): # 设置打印上下文
+            with torch.set_grad_enabled(mode == TorchMode.TRAIN):# 根据模式设置梯度计算
+                for batch_id, batch in self.iter_wrap(enumerate(dataloader)): # 遍历数据
+                    batch_len = len(next(iter(batch.values()))) # 获取当前批次的长度
+                    did += batch_len # 更新已处理数据量
                     if self.cuda:
-                        dict_to_cuda(batch, **({'non_blocking': True} if self.keep_ram else {}))
+                        dict_to_cuda(batch, **({'non_blocking': True} if self.keep_ram else {})) # 移动数据到 CUDA
                     if mode == TorchMode.TRAIN:
-                        self.optimizer.zero_grad()
+                        self.optimizer.zero_grad()  # 清空梯度
                     if self.embedder is not None:
-                        #注意 
+                        #  使用嵌入层处理数据
                         batch[self.embed_channel + '_embed'] = self.embedder(batch[self.embed_channel])
+                    # 获取需要的参数
                     run_kwargs = collections.OrderedDict((key, batch[key]) for key in self.pass_keys)
                     if self.cat_channels:
+                        # 如果需要连接通道
                         output = self.model(torch.cat(tuple(run_kwargs.values()), 1))
                     elif self.pass_as_kwargs:
+                        # 如果参数作为关键字传递
                         output = self.model(**run_kwargs)
                     else:
+                        # 正常传递参数
                         output = self.model(*run_kwargs.values())
+                     # 计算损失
                     if mode == TorchMode.TRAIN or all([key in batch for key in self.gt_keys]):
+                         # 获取真实值
                         loss_kwargs = collections.OrderedDict((key, batch[key]) for key in self.gt_keys)
                         if self.pass_as_kwargs:
+                            # 使用关键字传递损失
                             loss = self.loss_fn(output, **loss_kwargs)
                         else:
+                            # 位置参数传递损失
                             loss = self.loss_fn(output, *loss_kwargs.values())
                         if mode == TorchMode.TRAIN:
+                            #反向传播
                             loss.backward()
+                            # 更新优化器
                             self.optimizer.step()
                     else:
+                        # 不计算损失
                         loss = None
                     print_str = f'Epoch id: {self.run_times[dataloader.dataset]}\t{did: 6d} / {datalen : 6d}\t'
                     if loss is not None:

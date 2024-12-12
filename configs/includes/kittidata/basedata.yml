@@ -1,22 +1,24 @@
 train:
-  folder: /home/public/liubo/lidar-intensity/dataset/train
+  # folder: /home/public/liubo/lidar-intensity/dataset/train
+  folder: /home/public/DataSetLarge/SemanticKitti/dataset/sequences/pseudo-velodyne/grid/09
   name: kitti-train
   ext: .npy
   shuffle: True
   keep_ram: True
 val:
-  folder: /home/public/liubo/lidar-intensity/dataset/train
+  # folder: /home/public/liubo/lidar-intensity/dataset/train
+  folder: /home/public/DataSetLarge/SemanticKitti/dataset/sequences/pseudo-velodyne/grid/09
   name: kitti-val
   ext: .npy
   shuffle: False
   keep_ram: True
 train_loader:
-  batch_size: 2 # 24
+  batch_size: 5 # 24
   shuffle: True
   num_workers: 4
   pin_memory: True
 val_loader:
-  batch_size: 2 # 24
+  batch_size: 5 # 24
   shuffle: False
   num_workers: 4
   pin_memory: True

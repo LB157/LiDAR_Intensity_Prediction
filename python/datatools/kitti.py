@@ -1,7 +1,7 @@
 import functools
 import glob
 import os.path as osp
-
+import yaml
 import attr
 import numpy as np
 
@@ -93,8 +93,14 @@ def label_loader(fname):
 
 #加载SemanticKITTI的标签
 def label_semkitti_loader(fname):
-    return np.fromfile(fname, dtype='u4') & 0xFFFF
-
+    yaml_fname = '/home/public/liubo/lidar-intensity/python/datatools/semantickitti-all.yaml'
+    with open(yaml_fname, 'r') as f:
+        mapping = yaml.safe_load(f)
+        learning_map = mapping['learning_map']
+    original_labels=np.fromfile(fname, dtype='u4') & 0xFFFF
+    labels = np.vectorize(learning_map.get)(original_labels)
+    labels = np.where(labels is None, 0, labels) 
+    return labels
 
 class KittiDataset(ot.dataset.Dataset):
     def __init__(self, base_dir, odo_dataset=True, have_labels=True):
