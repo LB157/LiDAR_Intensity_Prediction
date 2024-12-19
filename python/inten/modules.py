@@ -33,9 +33,13 @@ class DeFire(nn.Module):
     def __init__(self, in_channels, squeeze, expand, cam=False, top_parent=None):
         super().__init__()
         self.in_channels = in_channels
+        # 输出通道数，展开的通道数的两倍
         self.out_channels = expand * 2
+        # 定义压缩卷积层
         self.squeeze = Conv(in_channels, squeeze, 1, top_parent=top_parent)
+        # 定义反卷积层
         self.deconv = DeConv(squeeze)
+         # 定义1x1扩展卷积层
         self.expand1x1 = Conv(squeeze, expand, 1, top_parent=top_parent)
         self.expand3x3 = Conv(squeeze, expand, 3, 1, top_parent=top_parent)
         if cam:
@@ -47,6 +51,8 @@ class DeFire(nn.Module):
         sqd = self.deconv(self.squeeze(x))
         e1 = self.expand1x1(sqd)
         e3 = self.expand3x3(sqd)
+        # 如果 e1 的 shape 是 (batch_size, num_channels, height1, width1)，而 e3 的 shape 是 (batch_size, num_channels, height2, width2)，那么这两个张量可以被拼接，前提是 num_channels 相等。
+        # 拼接后，生成的张量 c 的 shape 将是 (batch_size, 2 * num_channels, max(height1, height2), max(width1, width2))，具体的高度和宽度将取决于您的具体实现和后续处理。
         c = torch.cat([e1, e3], 1)
         if self.cam is not None:
             return self.cam(c)
@@ -118,6 +124,16 @@ class DeConv(nn.Module):
         return self.net(x)
 
 
+
+
+# SqueezePart这一层在神经网络中起到的作用是通过层次化的结构来提取特征，并随着网络的深入逐渐减少特征图的尺寸，同时增加特征的通道数。这种结构可以捕捉到更复杂的特征，并通过多层的组合来增强模型的表达能力。
+
+# 在这段代码中，如果深度（depth）为0，SqueezePart会直接将输入经过多个Fire模块进行特征提取。Fire模块通常是由1x1卷积和3x3卷积组成，通过逐步增加通道数，使得网络能够学习到更加细致和抽象的特征。而当深度不为0时，SqueezePart会首先经过Beg部分的两个Fire模块提取特征，然后通过Pooling模块减少特征图的尺寸，最后在Rest部分引入递归结构，进一步减少特征的空间维度，并增加通道数。
+
+# 在UNet模型中，类似的结构通常是通过编码器-解码器架构实现的，编码器部分逐步减小特征图的尺寸并增加通道，解码器部分则通过上采样将特征图的尺寸还原，并结合编码器中的特征图进行特征融合，最终生成分割结果。SqueezePart可以看作是在UNet编码器中的一种特化实现，其通过递归和特征融合策略来实现更深层次的特征抽取和信息整合。
+
+# 综上所述，SqueezePart在网络中重要的作用是逐步提取和构建特征，尤其是在深层网络中，通过控制深度和通道数的变化，更加灵活和高效地捕捉数据中的模式和特征。这种结构能够使得模型在处理复杂任务时，具有更好的性能和更强的泛化能力。
+
 class SqueezePart(nn.Module):
     SQ_ADD = 16
     EF_ADD = 64
@@ -125,6 +141,7 @@ class SqueezePart(nn.Module):
     def __init__(self, input_channels, sq, ef, depth, cam_depth=0, top_parent=None):
         super().__init__()
         cam = cam_depth > 0
+        # depth非0
         if depth == 0:
             self.net = nn.Sequential(
                 Fire(input_channels, sq, ef, cam, top_parent=top_parent),

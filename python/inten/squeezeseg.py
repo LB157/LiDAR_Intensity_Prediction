@@ -45,16 +45,23 @@ class SqueezeSegBone(nn.Module):
             md.Pool(3, 2, 1, top_parent=self),
             md.SqueezePart(conv_starts, squeeze_start, ef_start, squeeze_depth, cam_depth, top_parent=self),
             md.DeFire(2 * ef_start, squeeze_start, int(conv_starts / 2), top_parent=self),
+            # p 参数的默认值为 0.5，这表示在每次前向传播时，会随机将 50% 的特征（通道）设为 0。
+            # 这样可以有效地防止模型在训练过程中发生过拟合。
             nn.Dropout2d(),
         )
 
     def forward(self, x):
         shape = x.shape
         over = shape[-1] % self.reduce
+        # 检查 over 是否为真（即不等于零）。如果是，表示最后一个维度不是 self.reduce 的整数倍，
+        # 后续代码将会对输入张量进行填充
         if over:
+            # 计算需要填充的数量，以确保最后一个维度是 self.reduce 的整数倍
+        # 对输入张量 x 进行填充，使用 'replicate' 模式，填充的数值来自原始张量的边缘
             over = self.reduce - over
             x = F.pad(x, (int(over / 2), int(over / 2), 0, 0), 'replicate')
         pre_add = self.start(x)
         insides = self.rest(pre_add)
         result = pre_add + insides
+        # 将初步输出和进一步输出进行相加，得到最终结果
         return result

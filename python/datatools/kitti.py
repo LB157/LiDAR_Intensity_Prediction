@@ -164,7 +164,8 @@ class KittiEntry(ot.dataset.DatasetEntry):
             # 3. dist: 强度与其对应箱中心之间的距离，也增加一维。
             # 4. self.correct_label_velo: 正确的标签数据，增加一维。
             # 5. self.color_velo: 点云的颜色信息。
-            pcl = np.concatenate((self.velo, bins[None, ...], dist[None, ...], self.correct_label_velo[None, ...], self.color_velo), axis=0)
+            pcl = np.concatenate((self.velo, bins[None, ...], dist[None, ...], 
+                                  self.correct_label_velo[None, ...], self.color_velo), axis=0)
         else:
             # 如果没有标签，仅拼接以下各部分：
             # 1. self.velo: 原始的点云数据。
@@ -247,3 +248,9 @@ class KittiEntry(ot.dataset.DatasetEntry):
     )
     velodyne_grid = ot.dataset.DataAttrib('{data_id:0{width}d}.npy', np.load, ('pseudo-velodyne', 'grid/09'), _velo_grid_create, np.save)
     velodyne_pcl = ot.dataset.DataAttrib('{data_id:0{width}d}.npy', np.load, ('pseudo-velodyne', 'pcl/09'), _velo_pcl_create, np.save, ['name'])
+
+# grid: 400: (72, 2084, 13)    depth,x,y,z,intensity,bins,dist,label,r,g,b,color_mask,mask
+# pcl: 400: (11, 104662)    depth,x,y,z,intensity,label,r,g,b,color_mask,mask
+# color_pcl: 400: (9, 20346)    x,y,z,intensity,label,r,g,b,color_mask
+# color_pcl_gs_inten: 400: (9, 20346)  x,y,z,灰度,label,r,g,b,color_mask
+# color_velo: 400: (4, 124799)     1，2，3是rgb信息，第4维是被用来标识每个点是否得到了颜色信息（通过加法来实现）。

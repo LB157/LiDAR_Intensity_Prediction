@@ -119,7 +119,8 @@ cdef class LiDARParams:
         The raycasting will be done on R^T ([XYZ] - camera_center)
 
         Result will have [a x b x c] dimensions, where a = vertical resolution, b = horizontal resolution, 
-        c = m+2. First channel is distance to the point, last channel is a binary mask whether any point is in the spot, and everything in between is copied from corresponding point in pcl (where xyz is transformed)
+        c = m+2. First channel is distance to the point, last channel is a binary mask whether any point is in the spot, 
+        and everything in between is copied from corresponding point in pcl (where xyz is transformed)
         '''
         cdef:
             double_t[:, :, :] result

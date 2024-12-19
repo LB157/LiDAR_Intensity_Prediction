@@ -70,9 +70,11 @@ class ReflectHead(nn.Module):
         )
         self.up = md.DeFire(in_channels, mid_channels // 16, mid_channels // 2)
         self.clazz = md.Conv(mid_channels, 10, 1, relu=False, norm=False)
-        self.sq = nn.Sequential(nn.ReLU(inplace=True), nn.BatchNorm2d(10), md.Fire(10, 2, 8))
+        self.sq = nn.Sequential(nn.ReLU(inplace=True), nn.BatchNorm2d(10), 
+                                md.Fire(10, 2, 8))
         self.sm = md.Fire(mid_channels, mid_channels // 16, 8)
-        self.dist = nn.Sequential(md.Conv(32, 1, 1, relu=False, norm=False), nn.Sigmoid())
+        self.dist = nn.Sequential(md.Conv(32, 1, 1, relu=False, norm=False), 
+                                  nn.Sigmoid())
         self.return_value = return_value
 
     def forward(self, data_input, features):
@@ -83,6 +85,9 @@ class ReflectHead(nn.Module):
         clazz = self.clazz(up)
         sq = self.sq(clazz)
         sm = self.sm(up)
+        # 如果 sq 和 sm 是形状分别为 (N, C1) 和 (N, C2) 的两个张量，
+        # 那么 torch.cat((sq, sm), 1) 的结果将是一个形状为 (N, C1 + C2) 的张量。
+        # 这个操作有效地将两个张量在指定维度上“并排”连接在一起。
         dist = self.dist(torch.cat((sq, sm), 1))
         if self.return_value:
             pred_bin = torch.argmax(clazz, 1, keepdim=True)

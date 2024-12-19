@@ -172,17 +172,17 @@ class Runner(tu.Runner):
 
         # 保存模型结构到文件
         # 定义输入尺寸
-        input_size = (5, 11, 56, 512)  # 将要传入模型的输入尺寸
+        # input_size = (5, 11, 56, 512)  # 将要传入模型的输入尺寸
 
         # 文件名
-        file_name = 'hybloss_model_summary.txt'
+        # file_name = 'hybloss_model_summary.txt'
 
         # 将模型结构保存到文件
-        with open(file_name, 'w') as f:
-            with contextlib.redirect_stdout(f):
-                summary(model, input_size)
+        # with open(file_name, 'w') as f:
+            # with contextlib.redirect_stdout(f):
+                # summary(model, input_size)
 
-        self.save_model_structure_to_file('hybloss_model_structure.txt',model)
+        # self.save_model_structure_to_file('hybloss_model_structure.txt',model)
 
         super().__init__(
             model,
