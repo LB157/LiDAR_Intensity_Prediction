@@ -1,0 +1,97 @@
+{
+    "0.0": {
+        "mean_intensity": 0.1573813408613205,
+        "max_intensity": 0.17000000178813934,
+        "min_intensity": 0.14000000059604645
+    },
+    "1.0": {
+        "mean_intensity": 0.39259588718414307,
+        "max_intensity": 0.4099999964237213,
+        "min_intensity": 0.3799999952316284
+    },
+    "2.0": {
+        "mean_intensity": 0.00012967083603143692,
+        "max_intensity": 0.029999999329447746,
+        "min_intensity": 0.0
+    },
+    "3.0": {
+        "mean_intensity": 0.3040817677974701,
+        "max_intensity": 0.3100000023841858,
+        "min_intensity": 0.30000001192092896
+    },
+    "4.0": {
+        "mean_intensity": 0.5747453570365906,
+        "max_intensity": 0.6100000143051147,
+        "min_intensity": 0.550000011920929
+    },
+    "5.0": {
+        "mean_intensity": 0.7406862378120422,
+        "max_intensity": 0.8399999737739563,
+        "min_intensity": 0.699999988079071
+    },
+    "6.0": {
+        "mean_intensity": 0.4663788378238678,
+        "max_intensity": 0.49000000953674316,
+        "min_intensity": 0.44999998807907104
+    },
+    "7.0": {
+        "mean_intensity": 0.2429341971874237,
+        "max_intensity": 0.25999999046325684,
+        "min_intensity": 0.2199999988079071
+    },
+    "8.0": {
+        "mean_intensity": 0.10529430955648422,
+        "max_intensity": 0.12999999523162842,
+        "min_intensity": 0.07999999821186066
+    },
+    "9.0": {
+        "mean_intensity": 0.3440275192260742,
+        "max_intensity": 0.3499999940395355,
+        "min_intensity": 0.3400000035762787
+    },
+    "10.0": {
+        "mean_intensity": 0.19355978071689606,
+        "max_intensity": 0.20999999344348907,
+        "min_intensity": 0.18000000715255737
+    },
+    "11.0": {
+        "mean_intensity": 0.9514560699462891,
+        "max_intensity": 0.9900000095367432,
+        "min_intensity": 0.8500000238418579
+    },
+    "12.0": {
+        "mean_intensity": 0.5180965662002563,
+        "max_intensity": 0.5400000214576721,
+        "min_intensity": 0.5
+    },
+    "13.0": {
+        "mean_intensity": 0.28145599365234375,
+        "max_intensity": 0.28999999165534973,
+        "min_intensity": 0.27000001072883606
+    },
+    "14.0": {
+        "mean_intensity": 0.36366137862205505,
+        "max_intensity": 0.3700000047683716,
+        "min_intensity": 0.36000001430511475
+    },
+    "15.0": {
+        "mean_intensity": 0.6486474275588989,
+        "max_intensity": 0.6899999976158142,
+        "min_intensity": 0.6200000047683716
+    },
+    "16.0": {
+        "mean_intensity": 0.4292009472846985,
+        "max_intensity": 0.4399999976158142,
+        "min_intensity": 0.41999998688697815
+    },
+    "17.0": {
+        "mean_intensity": 0.323835551738739,
+        "max_intensity": 0.33000001311302185,
+        "min_intensity": 0.3199999928474426
+    },
+    "18.0": {
+        "mean_intensity": 0.05253644287586212,
+        "max_intensity": 0.07000000029802322,
+        "min_intensity": 0.03999999910593033
+    }
+}
